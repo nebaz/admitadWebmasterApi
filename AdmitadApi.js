@@ -6,6 +6,7 @@ const STATUS_OPEN = 'open';
 const STATUS_HOLD = 'hold';
 const STATUS_APPROVED = 'approved';
 const STATUS_PAID = 'paid';
+const LIMIT = 500;
 
 class AdmitadApi {
 
@@ -21,6 +22,7 @@ class AdmitadApi {
   }
 
   toAdmitadFormatDate(timestamp) {
+    timestamp = Math.min(timestamp, Date.now());  // otherwise admitad api will crash
     let dd = new Date(timestamp).getDate();
     let mm = new Date(timestamp).getMonth() + 1;
     return [(dd > 9 ? '' : '0') + dd, (mm > 9 ? '' : '0') + mm, new Date(timestamp).getFullYear()].join('.');
@@ -55,7 +57,30 @@ class AdmitadApi {
     let holdAdv = Number(balance.stalled);
     let availableBalance = Number(balance.balance);
     let commissionOpen = Number(balance.processing);
-    return {mainBalance, holdAdv, availableBalance, commissionOpen};
+    let {withdrawal, withdrawn} = await this.getFunds();
+    return {mainBalance, holdAdv, availableBalance, commissionOpen, withdrawal, withdrawn};
+  }
+
+  async getFunds() {
+    let withdrawal = 0;
+    let withdrawn = 0;
+    let offset = 0;
+    for (let offset = 0; 1; offset += LIMIT) {
+      let result = await this.apiRequest('payments/?offset=' + offset + '&limit=' + LIMIT);
+      if (!result) break;
+      for (let item of result.results) {
+        if (item.status == 'pending') {
+          withdrawal = Number((withdrawal + Number(item.payment_sum)).toFixed(2))
+        }
+        if (item.status == 'processed') {
+          withdrawn = Number((withdrawn + Number(item.payment_sum)).toFixed(2))
+        }
+      }
+      if (result._meta.count < offset + LIMIT) {
+        break;
+      }
+    }
+    return {withdrawal, withdrawn};
   }
 
   async getTrafficChannels() {
