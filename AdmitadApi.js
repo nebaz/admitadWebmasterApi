@@ -30,7 +30,7 @@ class AdmitadApi {
 
   async getToken() {
     let data = this.clientId + ':' + this.clientSecret;
-    let result = await (await fetch(ADMITAD_API_URL + 'token?grant_type=client_credentials&client_id=' + this.clientId + '&scope=' + SCOPE, {
+    let result = await (await fetch(ADMITAD_API_URL + 'token/?grant_type=client_credentials&client_id=' + this.clientId + '&scope=' + SCOPE, {
       method: 'POST',
       headers: {
         Authorization: 'Basic ' + Buffer.from(data).toString('base64')
@@ -52,7 +52,7 @@ class AdmitadApi {
     if (!Array.isArray(balance)) {
       return false;
     }
-    balance = balance.find(it => it.currency === currency);
+    balance = balance.find(it => it.currency === currency) || {};
     let mainBalance = Number(balance.stalled) + Number(balance.balance);
     let holdAdv = Number(balance.stalled);
     let availableBalance = Number(balance.balance);
