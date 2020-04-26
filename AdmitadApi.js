@@ -64,11 +64,12 @@ class AdmitadApi {
   async getFunds() {
     let withdrawal = 0;
     let withdrawn = 0;
+    let apiResult;
     let offset = 0;
-    for (let offset = 0; 1; offset += LIMIT) {
-      let result = await this.apiRequest('payments/?offset=' + offset + '&limit=' + LIMIT);
-      if (!result) break;
-      for (let item of result.results) {
+    do {
+      apiResult = await this.apiRequest('payments/?offset=' + offset + '&limit=' + LIMIT);
+      if (!apiResult) break;
+      for (let item of apiResult.results) {
         if (item.status == 'pending') {
           withdrawal = Number((withdrawal + Number(item.payment_sum)).toFixed(2))
         }
@@ -76,10 +77,8 @@ class AdmitadApi {
           withdrawn = Number((withdrawn + Number(item.payment_sum)).toFixed(2))
         }
       }
-      if (result._meta.count < offset + LIMIT) {
-        break;
-      }
-    }
+      offset += LIMIT;
+    } while (this.hasNextPage(apiResult));
     return {withdrawal, withdrawn};
   }
 
@@ -127,17 +126,26 @@ class AdmitadApi {
     return false;
   }
 
+  /**
+   * @returns Array<Object>
+   */
   async getLeadsByOfferId(dateFrom, dateTo, offerId = null, channelId = null) {
-    let params = 'statistics/actions/?limit=500&date_start=' + this.toAdmitadFormatDate(dateFrom) + '&date_end=' + this.toAdmitadFormatDate(dateTo);
-    if (offerId) {
-      params += '&campaign=' + offerId;
-    }
-    if (channelId) {
-      params += '&website=' + channelId;
-    }
-    let result = await this.apiRequest(params);
-    if (result && Array.isArray(result.results)) {
-      result.results.map(item => {
+    let result = [];
+    let apiResult;
+    let offset = 0;
+    do {
+      let params = 'statistics/actions/?offset=' + offset + '&limit=' + LIMIT + '&date_start=' + this.toAdmitadFormatDate(dateFrom) + '&date_end=' + this.toAdmitadFormatDate(dateTo);
+      if (offerId) {
+        params += '&campaign=' + offerId;
+      }
+      if (channelId) {
+        params += '&website=' + channelId;
+      }
+      apiResult = await this.apiRequest(params);
+      if (!apiResult || !Array.isArray(apiResult.results)) {
+        return false;
+      }
+      apiResult.results.map(item => {
         item.orderId = item.id.toString();
         item.offerId = Number(item.advcampaign_id);
         item.offerName = item.advcampaign_name;
@@ -148,9 +156,10 @@ class AdmitadApi {
         item.subaccount1 = item.subid;
         item.subaccount2 = item.subid1;
       });
-      return result.results;
-    }
-    return false;
+      result = result.concat(apiResult.results);
+      offset += LIMIT;
+    } while (this.hasNextPage(apiResult));
+    return result;
   }
 
   async getCrByOfferId(dateFrom, dateTo, offerId, channelId = null) {
@@ -205,6 +214,10 @@ class AdmitadApi {
       default:
         return status;
     }
+  }
+
+  hasNextPage(apiResult) {
+    return apiResult._meta.count > apiResult._meta.offset + apiResult._meta.limit;
   }
 
 }

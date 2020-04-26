@@ -1,6 +1,6 @@
 {
   "name": "admitad-webmaster-api",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "AdmitadApi.js",
   "description": "admitad.com API integration",
   "repository": {
