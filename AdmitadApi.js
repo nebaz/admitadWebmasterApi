@@ -52,7 +52,7 @@ class AdmitadApi {
     if (!Array.isArray(balance)) {
       return false;
     }
-    balance = balance.find(it => it.currency === currency) || {};
+    balance = balance.find(it => it.currency === currency) || {stalled: 0, balance: 0, processing: 0};
     let mainBalance = Number(balance.stalled) + Number(balance.balance);
     let holdAdv = Number(balance.stalled);
     let availableBalance = Number(balance.balance);
