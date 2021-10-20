@@ -186,7 +186,7 @@ class AdmitadApi {
       this.token = await this.getToken();
     }
     let url = ADMITAD_API_URL + params;
-    // console.info('admitadApiRequest', new Date().toLocaleString(), url);
+    // console.info('admitadApiRequest', new Date().toLocaleString(), url, this.token);
     let result;
     try {
       result = await (await fetch(url, {headers: {Authorization: 'Bearer ' + this.token}})).json();
@@ -195,7 +195,7 @@ class AdmitadApi {
     }
     // console.info('admatadApiResult', new Date().toLocaleString());
     if (!result || result.status_code || result.error) {
-      console.error('admitad api error: ', result ? result.details : '');
+      console.error('admitad api error: ', result);
       return false;
     }
     return result;
