@@ -96,10 +96,13 @@ class AdmitadApi {
    * short grouped statistics by offer
    * @return Array < {offerId,clicks,leadsOpen,...} >
    */
-  async getStatisticsOffersByOfferId(dateFrom, dateTo, offerId = null, subid = null) {
+  async getStatisticsOffers(dateFrom, dateTo, offerId = null, channelId = null, subid = null) {
     let params = 'statistics/campaigns/?limit=500&date_start=' + this.toAdmitadFormatDate(dateFrom) + '&date_end=' + this.toAdmitadFormatDate(dateTo);
     if (offerId) {
       params += '&campaign=' + offerId;
+    }
+    if (channelId) {
+      params += '&website=' + channelId;
     }
     if (subid) {
       params += '&subid=' + subid;
@@ -109,11 +112,13 @@ class AdmitadApi {
       result.results.map(item => {
         item.offerId = Number(item.advcampaign_id) || 0;
         item.offerName = item.advcampaign_name || '';
-        item.leadsRejected = 0;
-        item.leadsOpen = 0;
-        item.leadsApproved = 0;
         item.clicks = Number(item.clicks) || 0;
-        item.backUrlCount = 0;
+        item.backUrlCount = 0;  // do not supported
+        item.leads = (Number(item.sales_sum) || 0) + (Number(item.leads_sum) || 0);
+        item.cr = Number(item.cr) * 100;
+        item.leadsRejected = 0;  // do not supported
+        item.leadsOpen = 0;  // do not supported
+        item.leadsApproved = 0;  // do not supported
         item.commissionRejected = Number(item.payment_sum_declined) || 0;
         item.commissionOpen = Number(item.payment_sum_open) || 0;
         item.commissionApproved = Number(item.payment_sum_approved) || 0;
