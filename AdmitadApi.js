@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 const ADMITAD_API_URL = 'https://api.admitad.com/';
-const SCOPE = 'public_data websites manage_websites advcampaigns advcampaigns_for_website manage_advcampaigns banners landings banners_for_website payments manage_payments announcements referrals coupons coupons_for_website private_data tickets manage_tickets private_data_email private_data_phone private_data_balance validate_links deeplink_generator statistics opt_codes manage_opt_codes webmaster_retag manage_webmaster_retag broken_links manage_broken_links lost_orders manage_lost_orders broker_application manage_broker_application offline_sales offline_receipts manage_offline_receipts';
+const SCOPE = 'payments public_data websites manage_websites advcampaigns advcampaigns_for_website manage_advcampaigns banners landings banners_for_website announcements referrals coupons coupons_for_website private_data private_data_email private_data_phone private_data_balance validate_links deeplink_generator statistics opt_codes manage_opt_codes webmaster_retag manage_webmaster_retag broken_links manage_broken_links lost_orders manage_lost_orders broker_application manage_broker_application aliexpress_commission vendor_tool short_link web_notificator';
 const STATUS_REJECTED = 'rejected';
 const STATUS_OPEN = 'open';
 const STATUS_HOLD = 'hold';

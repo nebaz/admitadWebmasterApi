@@ -21,7 +21,7 @@ npm install --save admitad-webmaster-api
 * getBalance(currency: String): Object
 * getTrafficChannels(): Array< Object >
 * getOfferLinkByOfferId(offerId: Integer, channelId: Integer): String
-* getStatisticsOffersByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer?, channelId: Integer?, subId: String?): Array< Object >
+* getStatisticsOffers(dateFrom: timestamp, dateTo: timestamp, offerId: Integer?, channelId: Integer?, subId: String?): Array< Object >
 * getLeadsByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer?, channelId: Integer?): Array< Object >
 * getCrByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer, channelId: Integer?): Array< Object >
 * apiRequest(params: String) - native admitad api request
