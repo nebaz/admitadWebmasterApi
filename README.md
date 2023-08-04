@@ -17,11 +17,11 @@ npm install --save admitad-webmaster-api
     let profile = await api.getProfile();
 
 ## API
-* getProfile(): Object
-* getBalance(currency: String): Object
-* getTrafficChannels(): Array< Object >
-* getOfferLinkByOfferId(offerId: Integer, channelId: Integer): String
-* getStatisticsOffers(dateFrom: timestamp, dateTo: timestamp, offerId: Integer?, channelId: Integer?, subId: String?): Array< Object >
-* getLeadsByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer?, channelId: Integer?): Array< Object >
-* getCrByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer, channelId: Integer?): Array< Object >
+* getProfile()
+* getBalance(currency: String)
+* getTrafficChannels()
+* getOfferLinkByOfferId(offerId: Integer, channelId: Integer)
+* getStatisticsOffersByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer?, channelId: Integer?, subId: String?)
+* getLeadsByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer?, channelId: Integer?)
+* getCrByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer, channelId: Integer?)
 * apiRequest(params: String) - native admitad api request

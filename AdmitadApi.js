@@ -48,9 +48,9 @@ class AdmitadApi {
   }
 
   async getBalance(currency) {
-    let balance = await this.apiRequest('me/balance/extended/');
+    let {ok, errorMessage, result: balance} = await this.apiRequest('me/balance/extended/');
     if (!Array.isArray(balance)) {
-      return false;
+      return {ok: false, errorMessage};
     }
     balance = balance.find(it => it.currency === currency) || {stalled: 0, balance: 0, processing: 0};
     let mainBalance = Number(balance.stalled) + Number(balance.balance);
@@ -58,18 +58,19 @@ class AdmitadApi {
     let availableBalance = Number(balance.balance);
     let commissionOpen = Number(balance.processing);
     let {withdrawal, withdrawn} = await this.getFunds();
-    return {mainBalance, holdAdv, availableBalance, commissionOpen, withdrawal, withdrawn};
+    return {ok: true, result: {mainBalance, holdAdv, availableBalance, commissionOpen, withdrawal, withdrawn}};
   }
 
   async getFunds() {
     let withdrawal = 0;
     let withdrawn = 0;
-    let apiResult;
+    let ok;
+    let result;
     let offset = 0;
     do {
-      apiResult = await this.apiRequest('payments/?offset=' + offset + '&limit=' + LIMIT);
-      if (!apiResult) break;
-      for (let item of apiResult.results) {
+      ({ok, result} = await this.apiRequest('payments/?offset=' + offset + '&limit=' + LIMIT));
+      if (!ok) break;
+      for (let item of result.results) {
         if (item.status == 'pending') {
           withdrawal = Number((withdrawal + Number(item.payment_sum)).toFixed(2))
         }
@@ -78,18 +79,28 @@ class AdmitadApi {
         }
       }
       offset += LIMIT;
-    } while (this.hasNextPage(apiResult));
+    } while (this.hasNextPage(result));
     return {withdrawal, withdrawn};
   }
 
   async getTrafficChannels() {
-    let result = await this.apiRequest('websites/');
-    return result.results;
+    let {ok, result, errorMessage} = await this.apiRequest('websites/');
+    if (ok) {
+      return {ok, result: result.results};
+    } else {
+      return {ok, errorMessage};
+    }
   }
 
   async getOfferLinkByOfferId(offerId, trafficChannelId) {
-    let result = await this.apiRequest('advcampaigns/' + offerId + '/website/' + trafficChannelId + '/');
-    return result ? result.gotolink : false;
+    let {ok, result, errorMessage} = await this.apiRequest('advcampaigns/' + offerId + '/website/' + trafficChannelId + '/');
+    if (ok && result.gotolink) {
+      return {ok: true, result: result.gotolink};
+    }
+    if (ok && result.connection_status === 'declined') {
+      return {ok: false, errorMessage: 'unsubscribed'};
+    }
+    return {ok: false, errorMessage};
   }
 
   /**
@@ -107,8 +118,8 @@ class AdmitadApi {
     if (subid) {
       params += '&subid=' + subid;
     }
-    let result = await this.apiRequest(params);
-    if (result && Array.isArray(result.results)) {
+    let {ok, result, errorMessage} = await this.apiRequest(params);
+    if (ok && Array.isArray(result?.results)) {
       result.results.map(item => {
         item.offerId = Number(item.advcampaign_id) || 0;
         item.offerName = item.advcampaign_name || '';
@@ -126,9 +137,9 @@ class AdmitadApi {
       if (offerId) {
         result.results = result.results.filter(it => it.offerId === offerId);
       }
-      return result.results;
+      return {ok, result: result.results};
     }
-    return false;
+    return {ok: false, errorMessage};
   }
 
   /**
@@ -136,7 +147,7 @@ class AdmitadApi {
    */
   async getLeadsByOfferId(dateFrom, dateTo, offerId = null, channelId = null) {
     let result = [];
-    let apiResult;
+    let apiData;
     let offset = 0;
     do {
       let params = 'statistics/actions/?offset=' + offset + '&limit=' + LIMIT + '&date_start=' + this.toAdmitadFormatDate(dateFrom) + '&date_end=' + this.toAdmitadFormatDate(dateTo);
@@ -146,11 +157,11 @@ class AdmitadApi {
       if (channelId) {
         params += '&website=' + channelId;
       }
-      apiResult = await this.apiRequest(params);
-      if (!apiResult || !Array.isArray(apiResult.results)) {
-        return false;
+      apiData = await this.apiRequest(params);
+      if (!apiData.ok || !Array.isArray(apiData?.result?.results)) {
+        return {ok: false, errorMessage: apiData.errorMessage};
       }
-      apiResult.results.map(item => {
+      apiData.result.results.map(item => {
         item.orderId = item.id.toString();
         item.offerId = Number(item.advcampaign_id);
         item.offerName = item.advcampaign_name;
@@ -161,10 +172,10 @@ class AdmitadApi {
         item.subaccount1 = item.subid;
         item.subaccount2 = item.subid1;
       });
-      result = result.concat(apiResult.results);
+      result = result.concat(apiData.result.results);
       offset += LIMIT;
-    } while (this.hasNextPage(apiResult));
-    return result;
+    } while (this.hasNextPage(apiData.result));
+    return {ok: true, result};
   }
 
   async getCrByOfferId(dateFrom, dateTo, offerId, channelId = null) {
@@ -173,17 +184,20 @@ class AdmitadApi {
     if (channelId) {
       params += '&website=' + channelId;
     }
-    let result = await this.apiRequest(params);
-    if (result && Array.isArray(result.results)) {
-      return result.results.map(item => ({
-        channelId: Number(item.website_id) || 0,
-        channelName: item.website_name,
-        leads: (Number(item.sales_sum) || 0) + (Number(item.leads_sum) || 0),
-        clicks: Number(item.clicks) || 0,
-        cr: Number(item.cr) * 100
-      }));
+    let {ok, result, errorMessage} = await this.apiRequest(params);
+    if (ok && Array.isArray(result?.results)) {
+      return {
+        ok,
+        result: result.results.map(item => ({
+          channelId: Number(item.website_id) || 0,
+          channelName: item.website_name,
+          leads: (Number(item.sales_sum) || 0) + (Number(item.leads_sum) || 0),
+          clicks: Number(item.clicks) || 0,
+          cr: Number(item.cr) * 100
+        }))
+      };
     }
-    return false;
+    return {ok: false, errorMessage};
   }
 
   async apiRequest(params) {
@@ -201,9 +215,9 @@ class AdmitadApi {
     // console.info('admatadApiResult', new Date().toLocaleString());
     if (!result || result.status_code || result.error) {
       console.error('admitad api error: ', result);
-      return false;
+      return {ok: false, errorMessage: result?.error};
     }
-    return result;
+    return {ok: true, result};
   }
 
   getLeadStatus(status, paid) {
