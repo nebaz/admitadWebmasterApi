@@ -57,11 +57,11 @@ class AdmitadApi {
     let holdAdv = Number(balance.stalled);
     let availableBalance = Number(balance.balance);
     let commissionOpen = Number(balance.processing);
-    let {withdrawal, withdrawn} = await this.getFunds();
+    let {withdrawal, withdrawn} = await this.getFunds(currency);
     return {ok: true, result: {mainBalance, holdAdv, availableBalance, commissionOpen, withdrawal, withdrawn}};
   }
 
-  async getFunds() {
+  async getFunds(currency) {
     let withdrawal = 0;
     let withdrawn = 0;
     let ok;
@@ -70,6 +70,9 @@ class AdmitadApi {
     do {
       ({ok, result} = await this.apiRequest('payments/?offset=' + offset + '&limit=' + LIMIT));
       if (!ok) break;
+      if (currency) {
+        result.results = result.results.filter(it => it.currency === currency);
+      }
       for (let item of result.results) {
         if (item.status == 'pending') {
           withdrawal = Number((withdrawal + Number(item.payment_sum)).toFixed(2))
@@ -90,6 +93,29 @@ class AdmitadApi {
     } else {
       return {ok, errorMessage};
     }
+  }
+
+  async getOffersData(offerId) {
+    let result = [];
+    let apiData;
+    let offset = 0;
+    do {
+      let params = 'advcampaigns/';
+      if (offerId) {
+        params += offerId + '/';
+      }
+      params += '?offset=' + offset + '&limit=' + LIMIT;
+      apiData = await this.apiRequest(params);
+      if (!apiData.ok) {
+        return {ok: false, errorMessage: apiData.errorMessage};
+      }
+      if (!Array.isArray(apiData?.result?.results)) {
+        return {ok: true, result: apiData};
+      }
+      result = result.concat(apiData.result.results);
+      offset += LIMIT;
+    } while (this.hasNextPage(apiData.result));
+    return {ok: true, result};
   }
 
   async getOfferLinkByOfferId(offerId, trafficChannelId) {

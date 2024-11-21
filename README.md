@@ -24,4 +24,5 @@ npm install --save admitad-webmaster-api
 * getStatisticsOffersByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer?, channelId: Integer?, subId: String?)
 * getLeadsByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer?, channelId: Integer?)
 * getCrByOfferId(dateFrom: timestamp, dateTo: timestamp, offerId: Integer, channelId: Integer?)
+* getOffersData(offerId: Integer?)
 * apiRequest(params: String) - native admitad api request
