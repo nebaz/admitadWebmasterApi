@@ -95,7 +95,7 @@ class AdmitadApi {
     }
   }
 
-  async getOffersData(offerId) {
+  async getOffersData(offerId, channelId) {
     let result = [];
     let apiData;
     let offset = 0;
@@ -104,18 +104,38 @@ class AdmitadApi {
       if (offerId) {
         params += offerId + '/';
       }
+      if (channelId) {
+        params += 'website/' + channelId + '/';
+      }
       params += '?offset=' + offset + '&limit=' + LIMIT;
       apiData = await this.apiRequest(params);
       if (!apiData.ok) {
         return {ok: false, errorMessage: apiData.errorMessage};
       }
       if (!Array.isArray(apiData?.result?.results)) {
-        return {ok: true, result: apiData};
+        return apiData;
       }
       result = result.concat(apiData.result.results);
       offset += LIMIT;
     } while (this.hasNextPage(apiData.result));
     return {ok: true, result};
+  }
+
+  async getOfferLinkByOfferId(offerId, trafficChannelId) {
+    let {ok, result, errorMessage} = await this.apiRequest('advcampaigns/' + offerId + '/website/' + trafficChannelId + '/');
+    if (ok && result.gotolink) {
+      return {ok: true, result: result.gotolink};
+    }
+    if (ok && result.connection_status === 'declined') {
+      return {ok: false, errorMessage: 'unsubscribed'};
+    }
+    return {ok: false, errorMessage};
+  }
+
+  async join(offerId, channelId) {
+    let params = 'advcampaigns/' + offerId + '/attach/' + channelId + '/';
+    let apiData = await this.apiRequest(params, 'POST');
+    return apiData;
   }
 
   async getOfferLinkByOfferId(offerId, trafficChannelId) {
@@ -226,7 +246,7 @@ class AdmitadApi {
     return {ok: false, errorMessage};
   }
 
-  async apiRequest(params) {
+  async apiRequest(params, method = 'GET') {
     if (!this.token) {
       this.token = await this.getToken();
     }
@@ -234,7 +254,7 @@ class AdmitadApi {
     // console.info('admitadApiRequest', new Date().toLocaleString(), url, this.token);
     let result;
     try {
-      result = await (await fetch(url, {headers: {Authorization: 'Bearer ' + this.token}})).json();
+      result = await (await fetch(url, {method, headers: {Authorization: 'Bearer ' + this.token}})).json();
     } catch (e) {
       console.error('admitad api error', e);
     }
