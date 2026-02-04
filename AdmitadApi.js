@@ -138,17 +138,6 @@ class AdmitadApi {
     return apiData;
   }
 
-  async getOfferLinkByOfferId(offerId, trafficChannelId) {
-    let {ok, result, errorMessage} = await this.apiRequest('advcampaigns/' + offerId + '/website/' + trafficChannelId + '/');
-    if (ok && result.gotolink) {
-      return {ok: true, result: result.gotolink};
-    }
-    if (ok && result.connection_status === 'declined') {
-      return {ok: false, errorMessage: 'unsubscribed'};
-    }
-    return {ok: false, errorMessage};
-  }
-
   /**
    * short grouped statistics by offer
    * @return Array < {offerId,clicks,leadsOpen,...} >
@@ -257,6 +246,7 @@ class AdmitadApi {
       result = await (await fetch(url, {method, headers: {Authorization: 'Bearer ' + this.token}})).json();
     } catch (e) {
       console.error('admitad api error', e);
+      return {ok: false, errorMessage: e?.message};
     }
     // console.info('admatadApiResult', new Date().toLocaleString());
     if (!result || result.status_code || result.error) {
