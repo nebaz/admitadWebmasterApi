@@ -1,6 +1,6 @@
 {
   "name": "admitad-webmaster-api",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "main": "AdmitadApi.js",
   "description": "admitad.com API integration",
   "repository": {
@@ -10,12 +10,14 @@
   "homepage": "http://github.com/nebaz/admitadWebmasterApi",
   "author": "Nebaz <nebaz@ya.ru>",
   "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
   "keywords": [
     "admitad",
     "webmaster",
     "api"
   ],
   "dependencies": {
-    "node-fetch": "~2.6.7"
   }
 }
